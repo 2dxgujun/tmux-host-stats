@@ -7,7 +7,7 @@
 *.o
 *.so
 sysstat
-tmux-mem-cpu-load
+tmux-host-stats
 
 # CMake generated #
 ###################

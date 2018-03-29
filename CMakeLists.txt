@@ -17,18 +17,16 @@
 #
 
 cmake_minimum_required(VERSION 2.6)
-if(COMMAND cmake_policy)
-  cmake_policy(VERSION 2.6)
-endif(COMMAND cmake_policy)
 
 ### General Package stuff
-project(tmux-mem-cpu-load)
-set(tmux-mem-cpu-load_VERSION_MAJOR 3)
-set(tmux-mem-cpu-load_VERSION_MINOR 4)
-set(tmux-mem-cpu-load_VERSION_PATCH 0)
+project(tmux-host-stats)
+set(tmux-host-stats_VERSION_MAJOR 3)
+set(tmux-host-stats_VERSION_MINOR 4)
+set(tmux-host-stats_VERSION_PATCH 0)
+
 #Compute full version string
-set(tmux-mem-cpu-load_VERSION
-  ${tmux-mem-cpu-load_VERSION_MAJOR}.${tmux-mem-cpu-load_VERSION_MINOR}.${tmux-mem-cpu-load_VERSION_PATCH})
+set(tmux-host-stats_VERSION
+  ${tmux-host-stats_VERSION_MAJOR}.${tmux-host-stats_VERSION_MINOR}.${tmux-host-stats_VERSION_PATCH})
 
 # Check whether we have support for c++11 in compiler and fail if we don't
 include(CheckCXXCompilerFlag)
@@ -46,7 +44,7 @@ endif()
 
 # generate header file to handle version
 configure_file(
-  "${PROJECT_SOURCE_DIR}/common/version.h.in" "${PROJECT_BINARY_DIR}/version.h"
+  "${PROJECT_SOURCE_DIR}/src/version.h.in" "${PROJECT_BINARY_DIR}/version.h"
   )
 
 # set build type
@@ -59,125 +57,20 @@ endif(NOT CMAKE_BUILD_TYPE)
 # detect system type
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
   message(STATUS "Linux detected")
-  set(METER_SOURCES "linux/memory.cc" "linux/cpu.cc" "common/load.cc")
+  set(METER_SOURCES "src/stats.linux.cc")
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
   message(STATUS "Darwin detected")
-  set(METER_SOURCES "osx/memory.cc" "osx/cpu.cc" "common/load.cc")
-elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-  message(STATUS "FreeBSD detected")
-  set(METER_SOURCES "freebsd/memory.cc" "freebsd/cpu.cc" "common/load.cc")
-elseif(CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
-  # OpenBSD Stuff Here
-  message(STATUS "OpenBSD detected")
-  set(METER_SOURCES "openbsd/memory.cc" "openbsd/cpu.cc" "common/load.cc")
-  if(CMAKE_SYSTEM_VERSION VERSION_LESS 5.7)
-    add_definitions(-DOPENBSD_WORKAROUND=1)
-  endif()
-elseif(CMAKE_SYSTEM_NAME MATCHES "NetBSD")
-  set(METER_SOURCES "netbsd/memory.cc" "netbsd/cpu.cc" "common/load.cc")
+  set(METER_SOURCES "src/stats.osx.cc")
 else()
   message(FATAL_ERROR "Cannot be compiled on this system")
 endif()
 
 # set common source files
-set(COMMON_SOURCES "common/main.cc" "common/memory.cc" "common/graph.cc" "common/powerline.cc")
+set(COMMON_SOURCES "src/main.cc")
 
 # add binary tree so we find version.h
 include_directories("${PROJECT_BINARY_DIR}")
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/common")
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/src")
 
-add_executable(tmux-mem-cpu-load ${COMMON_SOURCES} ${METER_SOURCES})
-install(TARGETS tmux-mem-cpu-load RUNTIME DESTINATION bin)
-
-include(CTest)
-if(BUILD_TESTING)
-  add_test(NAME usage
-    COMMAND tmux-mem-cpu-load -h
-    )
-
-  add_test(NAME no_arguments
-    COMMAND tmux-mem-cpu-load
-    )
-
-  add_test(NAME custom_interval
-    COMMAND tmux-mem-cpu-load -i 3
-    )
-
-  add_test(NAME no_cpu_graph
-    COMMAND tmux-mem-cpu-load -g 0
-    )
-
-  add_test(NAME colors
-    COMMAND tmux-mem-cpu-load --colors
-    )
-
-  add_test(NAME colors_short
-    COMMAND tmux-mem-cpu-load -c
-    )
-
-  add_test(NAME powerline-right
-    COMMAND tmux-mem-cpu-load --powerline-right
-    )
-
-  add_test(NAME powerline-left
-    COMMAND tmux-mem-cpu-load --powerline-left
-    )
-
-  add_test(NAME invalid_status_interval
-    COMMAND tmux-mem-cpu-load -i -1
-    )
-
-  add_test(NAME invalid_graph_lines
-    COMMAND tmux-mem-cpu-load --graph_lines -2
-    )
-
-  add_test(NAME old_option_specification
-    COMMAND tmux-mem-cpu-load 2 8
-    )
-
-  add_test(NAME memory_mode_free_memory
-    COMMAND tmux-mem-cpu-load -m 1
-    )
-
-  add_test(NAME memory_mode_used_percentage
-    COMMAND tmux-mem-cpu-load -m 2
-    )
-
-  add_test(NAME averages_count_0
-    COMMAND tmux-mem-cpu-load -a 0
-    )
-
-  add_test(NAME averages_count_1
-    COMMAND tmux-mem-cpu-load -a 1
-    )
-
-  add_test(NAME averages_count_2
-    COMMAND tmux-mem-cpu-load -a 2
-    )
-
-  add_test(NAME averages_count_3
-    COMMAND tmux-mem-cpu-load -a 3
-    )
-
-  add_test(NAME cpu_mode_0
-    COMMAND tmux-mem-cpu-load --cpu-mode 0
-    )
-
-  add_test(NAME cpu_mode_1
-    COMMAND tmux-mem-cpu-load --cpu-mode 1
-    )
-
-  add_test(NAME cpu_mode_short_0
-    COMMAND tmux-mem-cpu-load -t 0
-    )
-
-  add_test(NAME cpu_mode_short_1
-    COMMAND tmux-mem-cpu-load -t 1
-    )
-
-  set_tests_properties(usage
-    invalid_status_interval
-    invalid_graph_lines
-    old_option_specification
-    PROPERTIES WILL_FAIL TRUE)
-endif()
+add_executable(tmux-host-stats ${COMMON_SOURCES} ${METER_SOURCES})
+install(TARGETS tmux-host-stats RUNTIME DESTINATION bin)
