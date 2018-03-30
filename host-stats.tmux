@@ -6,6 +6,8 @@ CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 EXECUTABLE_PATH="$CURRENT_DIR/build/tmux-host-stats"
 
+source "$CURRENT_DIR/helpers.sh"
+
 make_executable() {
 	pushd $CURRENT_DIR
 
@@ -24,5 +26,10 @@ main() {
 	if ! type "$EXECUTABLE_PATH" > /dev/null; then
 	  make_executable
 	fi
+
+	local status_right="$(get_tmux_option "status-right")"
+	local host_stats="#($CURRENT_DIR/host-stats.sh)"
+
+	set_tmux_option "status-right" "${host_stats}${status_right}"
 }
 main

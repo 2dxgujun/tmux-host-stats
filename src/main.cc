@@ -55,8 +55,8 @@ std::string cpu_string( unsigned int cpu_usage_delay )
 
   unsigned int percent = static_cast<unsigned int>( percentage );
 
-  oss.width( 5 );
-  oss << percentage * multiplier;
+  // oss.width( 5 );
+  oss << ' ' << percentage * multiplier;
 
   return oss.str();
 }
@@ -266,4 +266,3 @@ int main( int argc, char** argv )
 
   return EXIT_SUCCESS;
 }
-
