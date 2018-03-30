@@ -190,6 +190,7 @@ int main( int argc, char** argv )
   unsigned cpu_usage_delay = 990000;
   short averages_count = 3;
   MEMORY_MODE mem_mode = MEMORY_MODE_FREE_MEMORY;
+  bool version = false;
 
   static struct option long_options[] =
   {
@@ -202,12 +203,13 @@ int main( int argc, char** argv )
     { "mem-mode", required_argument, NULL, 'm' },
     { "cpu-mode", required_argument, NULL, 't' },
     { "averages-count", required_argument, NULL, 'a' },
+    { "version", no_argument, NULL, 'v' },
     { 0, 0, 0, 0 } // used to handle unknown long options
   };
 
   int c;
   // while c != -1
-  while( (c = getopt_long( argc, argv, "hi:cpqg:m:a:t:", long_options, NULL) ) != -1 )
+  while( (c = getopt_long( argc, argv, "hi:cpqg:m:a:t:vi:", long_options, NULL) ) != -1 )
   {
     switch( c )
     {
@@ -239,6 +241,9 @@ int main( int argc, char** argv )
           }
         averages_count = atoi( optarg );
         break;
+      case 'v': // --version, -a
+        version = true;
+        break;
       case '?':
         // getopt_long prints error message automatically
         return EXIT_FAILURE;
@@ -247,6 +252,10 @@ int main( int argc, char** argv )
         std::cerr << "?? getopt returned character code 0 " << c << std::endl;
         return EXIT_FAILURE;
     }
+  }
+  if (version) {
+    std::cout << tmux_host_stats_VERSION << "\n";
+    return EXIT_SUCCESS;
   }
 
   MemoryStatus memory_status;
