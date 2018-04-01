@@ -8,33 +8,37 @@ EXECUTABLE_PATH="$CURRENT_DIR/build/tmux-host-stats"
 
 source "$CURRENT_DIR/helpers.sh"
 
+SCALE0="[       ]"
+SCALE1="[ǀ      ]"
+SCALE2="[ǀǀ     ]"
+SCALE3="[ǀǀǀ    ]"
+SCALE4="[ǀǀǀǀ   ]"
+SCALE5="[ǀǀǀǀǀ  ]"
+SCALE6="[ǀǀǀǀǀǀ ]"
+SCALE7="[ǀǀǀǀǀǀǀ]"
+
+default_scale_max=7
+scale_max_options="@host-stats-max-scale"
+
 main() {
 	local interval="$(get_tmux_option "status-interval")"
-
-  # local stats="$($EXECUTABLE_PATH -i $interval -a 1)"
   local stats="$($EXECUTABLE_PATH -a 1)"
   local stats_arr=($stats)
 
-  # echo '[ǀǀǀǀǀǀǀ]'
-
   local available_mem=${stats_arr[0]}
   local cpu_percentage=${stats_arr[1]}
-  local load_avg=${stats_arr[2]}
+  local load_average=${stats_arr[2]}
+  echo $cpu_percentage
 
-  local level=$(bc <<< "(($cpu_percentage*0.07)+0.5)/1") # 0..7
-  # echo $level
- 	if (( $level > 7 )); then
- 		level=7
+  local max_scale="$(get_tmux_option "$scale_max_options" "$default_scale_max")"
+
+  local scale_value=$(bc <<< "(($cpu_percentage*($max_scale*.01))+0.5)/1")
+ 	if (( $scale_value > $max_scale )); then
+ 		scale_value=$max_scale
  	fi
 
-  echo "$available_mem $load_avg [$(printf "ǀ%.0s" $(seq 1 $level))$(printf " %.0s" $(seq 1 $((7-$level))))]"
-
-  # printf "\x1b[38;5;${i}mcolour${i}\x1b[0m\n"
-  # for i in 2 2 2 3 3 1 1; do
-  #   printf "\x1b[38;5;${i}mcolour${i}\x1b[0m\n"
-  # done
-
-  # echo "#[bg=default][#[fg=colour1]HELLOǀ#[fg=colour1]ǀ#[fg=colour1]ǀ#[default]]"
+  local scale=SCALE${scale_value}
+  echo "${!scale}"
 }
 
 main
