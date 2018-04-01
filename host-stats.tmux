@@ -23,7 +23,7 @@ make_executable() {
 }
 
 main() {
-	if ! type "$EXECUTABLE_PATH" > /dev/null; then
+	if [ ! -x "$EXECUTABLE_PATH" ]; then
 	  make_executable
 	fi
 
