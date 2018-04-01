@@ -22,23 +22,23 @@ scale_max_options="@host-stats-max-scale"
 
 main() {
 	local interval="$(get_tmux_option "status-interval")"
-  local stats="$($EXECUTABLE_PATH -a 1)"
+
+  local stats="$($EXECUTABLE_PATH -a 1 -i $interval)"
   local stats_arr=($stats)
 
   local available_mem=${stats_arr[0]}
   local cpu_percentage=${stats_arr[1]}
   local load_average=${stats_arr[2]}
-  echo $cpu_percentage
 
   local max_scale="$(get_tmux_option "$scale_max_options" "$default_scale_max")"
-
   local scale_value=$(bc <<< "(($cpu_percentage*($max_scale*.01))+0.5)/1")
+
  	if (( $scale_value > $max_scale )); then
  		scale_value=$max_scale
  	fi
-
   local scale=SCALE${scale_value}
-  echo "${!scale}"
+
+  echo "$available_mem $load_average ${!scale}"
 }
 
 main
