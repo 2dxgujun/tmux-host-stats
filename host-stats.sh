@@ -38,7 +38,9 @@ main() {
  	fi
   local scale=SCALE${scale_value}
 
-  echo "$available_mem $load_average ${!scale}"
+  local hostname="$(printf "%-3s" "$(hostname)")"
+
+  echo "$available_mem $load_average ${!scale} $hostname"
 }
 
 main
