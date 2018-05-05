@@ -6,65 +6,48 @@ EXECUTABLE_PATH="$CURRENT_DIR/build/tmux-host-stats"
 
 source "$CURRENT_DIR/helpers.sh"
 
-if
-[ -z "$SCALE0" ] ||
-[ -z "$SCALE1" ] ||
-[ -z "$SCALE2" ] ||
-[ -z "$SCALE3" ] ||
-[ -z "$SCALE4" ] ||
-[ -z "$SCALE5" ] ||
-[ -z "$SCALE6" ] || 
-[ -z "$SCALE7" ]
-then
-  SCALE0="       "
-  SCALE1="ǀ      "
-  SCALE2="ǀǀ     "
-  SCALE3="ǀǀǀ    "
-  SCALE4="ǀǀǀǀ   "
-  SCALE5="ǀǀǀǀǀ  "
-  SCALE6="ǀǀǀǀǀǀ "
-  SCALE7="ǀǀǀǀǀǀǀ"
-fi
+SCALE_MAX_DEFAULT=7
+SCALE_CHAR_DEFAULT="ǀ"
 
-SCALE0="#[fg=green]${SCALE0:0:2}#[fg=yellow]${SCALE0:2:3}#[fg=red]${SCALE0:5}"
-SCALE1="#[fg=green]${SCALE1:0:2}#[fg=yellow]${SCALE1:2:3}#[fg=red]${SCALE1:5}"
-SCALE2="#[fg=green]${SCALE2:0:2}#[fg=yellow]${SCALE2:2:3}#[fg=red]${SCALE2:5}"
-SCALE3="#[fg=green]${SCALE3:0:2}#[fg=yellow]${SCALE3:2:3}#[fg=red]${SCALE3:5}"
-SCALE4="#[fg=green]${SCALE4:0:2}#[fg=yellow]${SCALE4:2:3}#[fg=red]${SCALE4:5}"
-SCALE5="#[fg=green]${SCALE5:0:2}#[fg=yellow]${SCALE5:2:3}#[fg=red]${SCALE5:5}"
-SCALE6="#[fg=green]${SCALE6:0:2}#[fg=yellow]${SCALE6:2:3}#[fg=red]${SCALE6:5}"
-SCALE6="#[fg=green]${SCALE7:0:2}#[fg=yellow]${SCALE7:2:3}#[fg=red]${SCALE7:5}"
+SCALE_MAX="$(get_tmux_option "@host-stats-scale-max" "$SCALE_MAX_DEFAULT")"
+SCALE_CHAR="$(get_tmux_option "@host-stats-scale-char" "$SCALE_CHAR_DEFAULT")"
+SCALE_LEFT="$(get_tmux_option "@host-stats-scale-left" "[")"
+SCALE_RIGHT="$(get_tmux_option "@host-stats-scale-right" "]")"
 
-if [ -z "$SCALE_BOUND_L" ]; then
-  SCALE_BOUND_L="["
-fi
-
-if [ -z "$SCALE_BOUND_R" ]; then
-  SCALE_BOUND_R="]"
-fi
-
-default_scale_max=7
-scale_max_options="@host-stats-max-scale"
+for (( i=0; i<=$SCALE_MAX; i++)); do
+  n1=$(printf "%*s" $i "")
+  n2=$(printf "%*s" $(bc <<< "$SCALE_MAX-$i"))
+  declare "SCALE$i=${n1// /$SCALE_CHAR}${n2// /" "}"
+  n3=$(bc <<< "(($SCALE_MAX*.333)+.5)/1")
+  n4=$(bc <<< "$SCALE_MAX/2")
+  n5=$(bc <<< "$n3+$n4")
+  scale="SCALE$i"
+  declare "SCALE$i=#[fg=green]${!scale:0:$n3}#[fg=yellow]${!scale:$n3:$n4}#[fg=red]${!scale:$n5}"
+  declare "SCALE$i=#[fg=default]$SCALE_LEFT${!scale}#[fg=default]$SCALE_RIGHT"
+done
 
 main() {
-  local interval="$(get_tmux_option "status-interval")"
+  local status_interval="$(get_tmux_option "status-interval")"
 
-  local stats="$($EXECUTABLE_PATH -a 1 -i $interval)"
+  local stats="$($EXECUTABLE_PATH -a 1 -i $status_interval)"
   local stats_arr=($stats)
 
   local available_mem=${stats_arr[0]}
   local cpu_percentage=${stats_arr[1]}
   local load_average=${stats_arr[2]}
 
-  local max_scale="$(get_tmux_option "$scale_max_options" "$default_scale_max")"
-  local scale_value=$(bc <<< "(($cpu_percentage*($max_scale*.01))+0.5)/1")
+  local scale=$(bc <<< "(($cpu_percentage*($SCALE_MAX*.01))+0.5)/1")
 
-  if (( $scale_value > $max_scale )); then
-    scale_value=$max_scale
+  if (( $scale > $SCALE_MAX )); then
+    scale="$SCALE_MAX"
   fi
-  local scale=SCALE${scale_value}
+  local scale_result="SCALE${scale}"
+  echo "$available_mem $load_average ${!scale_result}"
 
-  echo "$available_mem $load_average $SCALE_BOUND_L${!scale}$SCALE_BOUND_R"
+  #for (( i=0; i<=$SCALE_MAX; i++ )); do
+  #  local scale="SCALE$i"
+  #  echo "${!scale}"
+  #done
 }
 
 main
