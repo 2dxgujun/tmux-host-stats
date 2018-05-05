@@ -7,23 +7,44 @@ EXECUTABLE_PATH="$CURRENT_DIR/build/tmux-host-stats"
 source "$CURRENT_DIR/helpers.sh"
 
 SCALE_MAX_DEFAULT=7
-SCALE_CHAR_DEFAULT="ǀ"
+SCALE_STYLE_DOT="dot"
+SCALE_STYLE_BAR="bar"
+SCALE_STYLE_DEFAULT="$SCALE_STYLE_BAR"
+
+SCALE_FRAME_BAR="ǀ"
+SCALE_FRAME_DOT="•"
+
+SCALE_L_BAR="["
+SCALE_R_BAR="]"
+
+SCALE_L_DOT="‹"
+SCALE_R_DOT="›"
 
 SCALE_MAX="$(get_tmux_option "@host-stats-scale-max" "$SCALE_MAX_DEFAULT")"
-SCALE_CHAR="$(get_tmux_option "@host-stats-scale-char" "$SCALE_CHAR_DEFAULT")"
-SCALE_LEFT="$(get_tmux_option "@host-stats-scale-left" "[")"
-SCALE_RIGHT="$(get_tmux_option "@host-stats-scale-right" "]")"
+SCALE_STYLE="$(get_tmux_option "@host-stats-scale-style" "$SCALE_STYLE_DEFAULT")"
+
+if [ "$SCALE_STYLE" = "$SCALE_STYLE_BAR" ]; then
+  SCALE_FRAME="$SCALE_FRAME_BAR"
+  SCALE_L="$SCALE_L_BAR"
+  SCALE_R="$SCALE_R_BAR"
+elif [ "$SCALE_STYLE" = "$SCALE_STYLE_DOT" ]; then
+  SCALE_FRAMR="$SCALE_FRAME_DOT"
+  SCALE_L="$SCALE_L_DOT"
+  SCALE_R="$SCALE_R_DOT"
+else
+  exit 1
+fi
 
 for (( i=0; i<=$SCALE_MAX; i++)); do
   n1=$(printf "%*s" $i "")
   n2=$(printf "%*s" $(bc <<< "$SCALE_MAX-$i"))
-  declare "SCALE$i=${n1// /$SCALE_CHAR}${n2// /" "}"
+  declare "SCALE$i=${n1// /$SCALE_FRAME}${n2// / }"
   n3=$(bc <<< "(($SCALE_MAX*.333)+.5)/1")
   n4=$(bc <<< "$SCALE_MAX/2")
   n5=$(bc <<< "$n3+$n4")
   scale="SCALE$i"
   declare "SCALE$i=#[fg=green]${!scale:0:$n3}#[fg=yellow]${!scale:$n3:$n4}#[fg=red]${!scale:$n5}"
-  declare "SCALE$i=#[fg=default]$SCALE_LEFT${!scale}#[fg=default]$SCALE_RIGHT"
+  declare "SCALE$i=#[fg=default]$SCALE_L${!scale}#[fg=default]$SCALE_R"
 done
 
 main() {
