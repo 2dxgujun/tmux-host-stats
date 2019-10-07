@@ -21,6 +21,7 @@
 struct MemoryStatus
 {
   float used_mem; // megabytes
+  float free_mem;
   float total_mem;
 };
 

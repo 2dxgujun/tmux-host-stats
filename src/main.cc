@@ -87,7 +87,7 @@ std::string mem_string( const MemoryStatus & mem_status, MEMORY_MODE mode = MEMO
   {
   case MEMORY_MODE_FREE_MEMORY: // Show free memory in MB or GB
     {
-    const float free_mem = mem_status.total_mem - mem_status.used_mem;
+    const float free_mem = mem_status.free_mem;
     const float free_mem_in_gigabytes = convert_unit( free_mem, GIGABYTES, MEGABYTES );
 
     // if free memory is less than 1 GB, use MB instead
